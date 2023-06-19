@@ -41,6 +41,7 @@
 #define SSD1303_SETPRECHARGE        0xD9
 #define SSD1303_SETCOMPINS          0xDA
 #define SSD1303_SETVCOMLEVEL        0xDB
+#define SSD1303_NOP                 0xE3
 
 class SSD1303 : public Adafruit_GrayOLED {
   public:
@@ -56,6 +57,8 @@ class SSD1303 : public Adafruit_GrayOLED {
   private:
     uint8_t page_offset = 0;
     uint8_t column_offset = 0;
+
+    void spiWriteFast(const uint8_t *buffer, size_t len);
 
     // Caution: needs to be under 32 byte long
     static constexpr inline uint8_t init_128x64[] = {

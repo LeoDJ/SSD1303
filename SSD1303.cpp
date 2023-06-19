@@ -133,6 +133,15 @@ bool SSD1303::begin(uint8_t addr, bool reset) {
     return true;
 }
 
+// Faster SPI write function (about 6x faster than spi_dev->write)
+void SSD1303::spiWriteFast(const uint8_t *buffer, size_t len) {
+    uint8_t scratchpad[len];
+    memcpy(scratchpad, buffer, len);
+    spi_dev->beginTransactionWithAssertingCS();
+    spi_dev->transfer(scratchpad, len);
+    spi_dev->endTransactionWithDeassertingCS();
+}
+
 /*!
     @brief  Do the actual writing of the internal frame buffer to display RAM
 */
@@ -177,7 +186,7 @@ void SSD1303::display() {
                 i2c_dev->write(ptr, to_write, true, &dc_byte, 1);
             } else {
                 digitalWrite(dcPin, HIGH);
-                spi_dev->write(ptr, to_write);
+                spiWriteFast(ptr, to_write);
             }
             ptr += to_write;
             bytes_remaining -= to_write;
@@ -188,6 +197,10 @@ void SSD1303::display() {
     if (i2c_dev) { // I2C
         // Set low speed clk
         i2c_dev->setSpeed(i2c_postclk);
+    }
+    else {
+        // Datasheet specifies in §7.7: "During data writing an additional NOP command should be inserted before the CS# is pulled HIGH"
+        oled_command(SSD1303_NOP);
     }
 
     // reset dirty window
