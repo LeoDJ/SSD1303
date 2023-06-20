@@ -25,7 +25,6 @@
 #define SSD1303_NORMALDISPLAY       0xA6
 #define SSD1303_INVERTDISPLAY       0xA7
 #define SSD1303_SETMULTIPLEX        0xA8
-#define SSD1303_DISPLAYDIM          0xAC
 #define SSD1303_DCDC                0xAD
 #define SSD1303_DCDC_VAL            0x8A
 #define SSD1303_DISPLAYOFF          0xAE
