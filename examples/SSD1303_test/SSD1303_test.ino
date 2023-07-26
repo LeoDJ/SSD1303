@@ -23,7 +23,7 @@ SSD1303 disp(128, 64, &SPI, OLED_DC, OLED_RESET, OLED_CS);
 #elif defined(USE_SW_SPI)
 SSD1303 disp(128, 64, OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 #elif defined(USE_I2C)
-SSD1303 disp(128, 64, &oledWire, OLED_RESET, 1e6);
+SSD1303 disp(128, 64, &Wire, OLED_RESET, 1e6);
 #endif
 
 void testDrawChar(void) {

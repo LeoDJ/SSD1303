@@ -1,8 +1,16 @@
 # SSD1303
 Arduino library for OLED displays with SSD1303 controller.
 
+## Possible Problems and Solutions
+- In I²C mode, the display sometimes glitches or the MCU freezes completely:
+  - Check your I²C pull-ups, you might need stronger ones (recommended 2.2k @ 3.3V / 4.7k @ 5V) or your cabling is too long or noisy
+    - To narrow the issue down: Check the return value of `display(true)`. If it's false sometimes, it means the MCU encountered x consecutive I²C errors.
+  - Try lowering the I²C speed to 400 or 100kHz
+  - If nothing is helping, you might have to switch to SPI mode
+
 ## Connection
-Which pins to connect where (based on a raw SSD1303 connection)
+Which pins to connect where (based on a raw SSD1303 connection).  
+Also check out [my breakout board](https://github.com/LeoDJ/SSD1303_Breakout).
 
 ### SPI
 | Display Pin | Connect to                    |

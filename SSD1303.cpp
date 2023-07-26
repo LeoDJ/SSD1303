@@ -133,19 +133,44 @@ bool SSD1303::begin(uint8_t addr, bool reset) {
     return true;
 }
 
-// Faster SPI write function (about 6x faster than spi_dev->write)
+// Faster SPI write function (about 6x faster than spi_dev->write) and also handle NOP command
 void SSD1303::spiWriteFast(const uint8_t *buffer, size_t len) {
     uint8_t scratchpad[len];
     memcpy(scratchpad, buffer, len);
     spi_dev->beginTransactionWithAssertingCS();
     spi_dev->transfer(scratchpad, len);
     spi_dev->endTransactionWithDeassertingCS();
+//     spi_dev->endTransaction();
+//     oled_command(SSD1303_NOP);  // also pulls CS high
+}
+
+void SSD1303::display() {
+    display(true);
+}
+
+bool SSD1303::display(bool autoRetry) {
+    if (!autoRetry) {
+        return doDisplay();
+    }
+    else {
+        for (int retries = 0; retries < SSD1303_I2C_RETRIES; retries++) {
+            bool ret = doDisplay();
+            if (ret) {
+                return true;
+            }
+            // re-init I2C bus
+            i2c_dev->end();
+            i2c_dev->begin(false);
+        }
+        // Serial.println("I2C timeout occured!");
+        return false;
+    }
 }
 
 /*!
     @brief  Do the actual writing of the internal frame buffer to display RAM
 */
-void SSD1303::display() {
+bool SSD1303::doDisplay() {
     yield();
 
     uint8_t *ptr = buffer;
@@ -178,12 +203,19 @@ void SSD1303::display() {
             uint8_t(SSD1303_SETPAGESTART + p + page_offset), 
             uint8_t(0x10 + ((page_start + column_offset) >> 4)),
             uint8_t((page_start + column_offset) & 0xF)};
-        oled_commandList(cmd, sizeof(cmd));
+        bool success = oled_commandList(cmd, sizeof(cmd));
+        if (!success) {
+            return false;
+        }
+
 
         while (bytes_remaining) {
             uint8_t to_write = min(bytes_remaining, maxbuff);
             if (i2c_dev) {
-                i2c_dev->write(ptr, to_write, true, &dc_byte, 1);
+                bool success = i2c_dev->write(ptr, to_write, true, &dc_byte, 1);
+                if (!success) {
+                    return false;
+                }
             } else {
                 digitalWrite(dcPin, HIGH);
                 spiWriteFast(ptr, to_write);
@@ -208,6 +240,7 @@ void SSD1303::display() {
     window_y1 = 1024;
     window_x2 = -1;
     window_y2 = -1;
+    return true;
 }
 
 void SSD1303::sleep() { oled_command(SSD1303_DISPLAYOFF); }

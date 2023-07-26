@@ -4,6 +4,7 @@
 #define WHITE 1
 
 #define SSD1303_I2C_ADDRESS 0x3C    // 011110+SA0+RW - 0x3C or 0x3D
+#define SSD1303_I2C_RETRIES 5
 
 #define SSD1303_SETLOWCOLUMN        0x00
 #define SSD1303_SETHIGHCOLUMN       0x10
@@ -49,7 +50,8 @@ class SSD1303 : public Adafruit_GrayOLED {
     SSD1303(uint16_t w, uint16_t h, SPIClass *spi, int8_t dc_pin, int8_t rst_pin, int8_t cs_pin, uint32_t bitrate = 8000000UL);
 
     bool begin(uint8_t i2caddr = SSD1303_I2C_ADDRESS, bool reset = true);
-    void display();
+    void display(void);
+    bool display(bool autoRetry);
     void sleep();
     void wake();
 
@@ -58,6 +60,7 @@ class SSD1303 : public Adafruit_GrayOLED {
     uint8_t column_offset = 0;
 
     void spiWriteFast(const uint8_t *buffer, size_t len);
+    bool doDisplay();
 
     // Caution: needs to be under 32 byte long
     static constexpr inline uint8_t init_128x64[] = {
